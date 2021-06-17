@@ -230,12 +230,18 @@ surface_set_input_region(struct wl_client *client, struct wl_resource *resource,
 static void
 surface_commit(struct wl_client *client, struct wl_resource *resource)
 {
-  // TODO
   struct y11_surface *surface = wl_resource_get_user_data(resource);
   wl_signal_emit(&surface->commit_signal, surface);
 
   // my code
   wl_list_init(&surface->pending.frame_callback_list);
+
+  if (surface->pending.buffer == NULL) return;
+  struct wl_shm_buffer *buffer = wl_shm_buffer_get(surface->pending.buffer->resource);
+  int32_t height = wl_shm_buffer_get_height(buffer);
+  int32_t width = wl_shm_buffer_get_width(buffer);
+  // void *data = wl_shm_buffer_get_data(buffer); // pixmap
+  fprintf(stdout, "Committed surface is %d x %d\n", height, width);
 }
 
 static void
