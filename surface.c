@@ -5,6 +5,7 @@
 #include <pixman.h>
 #include "desktop.h"
 #include "client.h"
+#include "region.h"
 #include "surface.h"
 
 struct wl_resource *
@@ -188,6 +189,7 @@ surface_frame(struct wl_client *client, struct wl_resource *resource, uint32_t c
     return;
   }
 
+
   wl_resource_set_implementation(cb->resource, NULL, cb, destroy_frame_callback);
   wl_list_insert(surface->pending.frame_callback_list.prev, &cb->link);
 }
@@ -195,14 +197,14 @@ surface_frame(struct wl_client *client, struct wl_resource *resource, uint32_t c
 static void
 surface_set_opaque_region(struct wl_client *client, struct wl_resource *resource, struct wl_resource *region_resource)
 {
-  struct y11_surface *surface = wl_resource_get_user_data(resource);
-  struct y11_region *region;
-  if (region_resource) {
-    region = wl_resource_get_user_data(region_resource);
-    pixman_region32_copy(&surface->pending.opaque, &region->region);
-  } else {
-    pixman_region32_clear(&surface->pending.opaque);
-  }
+  // struct y11_surface *surface = wl_resource_get_user_data(resource);
+  // struct y11_region *region;
+  // if (region_resource) {
+    // region = wl_resource_get_user_data(region_resource);
+    // pixman_region32_copy(&surface->pending.opaque, &region->region);
+  // } else {
+    // pixman_region32_clear(&surface->pending.opaque);
+  // }
 }
 
 static void
@@ -230,12 +232,10 @@ surface_commit(struct wl_client *client, struct wl_resource *resource)
 {
   // TODO
   struct y11_surface *surface = wl_resource_get_user_data(resource);
-  if (&surface->pending == NULL) {
-    printf("pending is NULL");
-  } else {
-    printf("Commit surface role: %s, [%d x %d]\n", surface->role_name, surface->pending.sx, surface->pending.sy);
-  }
-  fflush(stdout);
+  wl_signal_emit(&surface->commit_signal, surface);
+
+  // my code
+  wl_list_init(&surface->pending.frame_callback_list);
 }
 
 static void
@@ -280,8 +280,10 @@ y11_surface_create(struct y11_compositor *compositor)
 {
   struct y11_surface *surface;
 
-  surface = calloc(1, sizeof surface);
+  surface = calloc(1, sizeof *surface);
   if (surface == NULL) return NULL;
+
+  wl_signal_init(&surface->commit_signal);
   surface->compositor = compositor;
   return surface;
 }
@@ -292,8 +294,6 @@ y11_surface_destroy(struct y11_surface *surface)
 {
   free(surface);
 }
-
-
 
 static void
 destroy_surface(struct wl_resource *resource)

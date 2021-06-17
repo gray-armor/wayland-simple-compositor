@@ -1,12 +1,7 @@
 #include <wayland-server.h>
 #include "compositor.h"
 #include "surface.h"
-
-static void
-compositor_create_region()
-{
-  // TODO:
-}
+#include "region.h"
 
 static const struct wl_compositor_interface compositor_interface = {
   compositor_create_surface,

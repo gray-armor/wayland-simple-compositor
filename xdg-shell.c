@@ -151,6 +151,9 @@ y11_desktop_xdg_shell_protocol_create_positioner(
 }
 
 static void
+y11_desktop_surface_surface_commited(struct wl_listener *listener, void *data);
+
+static void
 y11_desktop_xdg_surface_protocol_get_toplevel(
 	struct wl_client *wl_client,
 	struct wl_resource *resource,
@@ -162,6 +165,11 @@ y11_desktop_xdg_surface_protocol_get_toplevel(
 	struct y11_desktop_xdg_toplevel *toplevel = dsurface->implementation_data;
 
 	ysurface->role_name = y11_desktop_xdg_toplevel_role;
+
+	// // my code
+	// toplevel->base.surface_commit_listener.notify = y11_desktop_surface_surface_commited;
+	// wl_signal_add(&toplevel->base.surface->commit_signal, &toplevel->base.surface_commit_listener);
+	// // end
 
 	toplevel->resource = y11_desktop_surface_add_resource(
 		toplevel->base.desktop_surface,
@@ -221,6 +229,36 @@ y11_desktop_xdg_surface_resource_destroy(struct wl_resource *resource)
 	  y11_desktop_surface_resource_destroy(resource);
 }
 
+// my code
+static void
+y11_desktop_surface_surface_commited(struct wl_listener *listener, void *data)
+{
+	struct y11_desktop_xdg_surface *surface = // y11_desktop_surfaceを経由しないことにした。
+		wl_container_of(listener, surface, surface_commit_listener);
+
+	struct wl_array states;
+	wl_array_init(&states);
+
+	switch (surface->role)
+	{
+	case Y11_DESKTOP_XDG_SURFACE_ROLE_NONE:
+	  // TODO
+		break;
+
+	case Y11_DESKTOP_XDG_SURFACE_ROLE_TOPLEVEL:
+		xdg_toplevel_send_configure(((struct y11_desktop_xdg_toplevel*) surface)->resource, 0, 0, &states);
+		break;
+
+	case Y11_DESKTOP_XDG_SURFACE_ROLE_POPUP:
+	  // TODO
+		break;
+	}
+
+	uint32_t serial = wl_display_next_serial(surface->desktop->compositor->wl_display);
+
+	xdg_surface_send_configure(surface->resource, serial);
+}
+
 static void
 y11_desktop_xdg_shell_protocol_get_xdg_surface(
 	struct wl_client *wl_client,
@@ -243,6 +281,11 @@ y11_desktop_xdg_shell_protocol_get_xdg_surface(
 	surface->surface = y11_surface;
 
 	surface->desktop_surface = y11_desktop_surface_create(surface->desktop, client, surface->surface, surface);
+
+	// my code
+	surface->surface_commit_listener.notify = y11_desktop_surface_surface_commited;
+	wl_signal_add(&surface->surface->commit_signal, &surface->surface_commit_listener);
+	// end
 
 	surface->resource = y11_desktop_surface_add_resource(
 		surface->desktop_surface,

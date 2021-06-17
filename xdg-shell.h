@@ -17,6 +17,7 @@ struct y11_desktop_xdg_surface {
 	struct y11_desktop *desktop;
 	struct y11_surface *surface;
 	struct y11_desktop_surface *desktop_surface;
+	struct wl_listener surface_commit_listener;
 
 	enum y11_desktop_xdg_surface_role role;
 };

@@ -35,6 +35,7 @@ struct y11_surface_state {
 struct y11_surface {
   struct wl_resource *resource;
   struct y11_compositor *compositor;
+  struct wl_signal commit_signal;
   struct y11_surface_state pending;
 
   const char *role_name;
@@ -43,11 +44,6 @@ struct y11_surface {
 struct y11_frame_callback {
   struct wl_resource *resource;
   struct wl_list link;
-};
-
-struct y11_region {
-  struct wl_resource *resource;
-  pixman_region32_t region;
 };
 
 void

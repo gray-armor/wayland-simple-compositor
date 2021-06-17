@@ -5,6 +5,7 @@
 #include <wayland-server.h>
 #include "compositor.h"
 #include "shell.h"
+#include "output.h"
 
 #define VERSION "0.1"
 
@@ -23,13 +24,14 @@ main (int argc, char *argv[])
 
   wl_global_create(com->wl_display, &wl_compositor_interface, 4, com, compositor_bind);
 
+  y11_output_init(com);
+
   y11_shell_init(com);
 
   com->loop = wl_display_get_event_loop(com->wl_display);
 
   wl_display_init_shm(com->wl_display);
 
-  printf("Hello, Wayland!\n");
   wl_display_run(com->wl_display);
 
   return 0;
